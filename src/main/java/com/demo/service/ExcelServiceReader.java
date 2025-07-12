@@ -1,5 +1,7 @@
 package com.demo.service;
 
+import com.demo.Model.CustumerCateg;
+import com.demo.Model.ResellerCateg;
 import com.demo.Model.SalesData;
 import org.springframework.stereotype.Service;
 import org.apache.poi.ss.usermodel.*;
@@ -46,6 +48,46 @@ public class ExcelServiceReader {
          workbook.close();
          return dataList;
     }
+    public List<CustumerCateg> readExcelFile2(InputStream inputStream) throws Exception {
+        List<CustumerCateg> dataList = new ArrayList<>();
+        Workbook workbook = new XSSFWorkbook(inputStream);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) continue; // Ignorer l'en-tête
+            CustumerCateg data = new CustumerCateg();
+
+            data.setName(getCellValue(row.getCell(0)));
+            data.setCategory(getCellValue(row.getCell(1)));
+
+
+            dataList.add(data);
+        }
+
+        workbook.close();
+        return dataList;
+    }
+    public List<ResellerCateg> readExcelFileReseller(InputStream inputStream) throws Exception {
+        List<ResellerCateg> dataList = new ArrayList<>();
+        Workbook workbook = new XSSFWorkbook(inputStream);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) continue; // Ignorer l'en-tête
+            ResellerCateg data = new ResellerCateg();
+
+            data.setResellerTypeName(getCellValue(row.getCell(2)));
+            data.setChannel(getCellValue(row.getCell(1)));
+            data.setResellerName(getCellValue(row.getCell(0)));
+
+
+            dataList.add(data);
+        }
+
+        workbook.close();
+        return dataList;
+    }
+
 
     private String getCellValue(Cell cell) {
         return cell == null ? null : cell.toString().trim();

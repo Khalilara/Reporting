@@ -1,5 +1,7 @@
 package com.demo.Controller;
 
+import com.demo.Model.CustumerCateg;
+import com.demo.Model.ResellerCateg;
 import com.demo.Model.SalesData;
 import com.demo.service.SalesDataService;
 import com.demo.service.ExcelServiceReader;
@@ -32,6 +34,26 @@ public class ExcelUploadController {
         try {
             List<SalesData> dataList = excelReader.readExcelFile(file.getInputStream());
             service.saveAll(dataList);
+            return ResponseEntity.ok("Fichier importé avec succès !");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+        }
+    }
+    @PostMapping("/upload/customer")
+    public ResponseEntity<String> uploadExcel2(@RequestParam("file") MultipartFile file) {
+        try {
+            List<CustumerCateg> dataList2 = excelReader.readExcelFile2(file.getInputStream());
+            service.saveAll2(dataList2);
+            return ResponseEntity.ok("Fichier importé avec succès !");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+        }
+    }
+    @PostMapping("/upload/reseller")
+    public ResponseEntity<String> uploadExcelReseller(@RequestParam("file") MultipartFile file) {
+        try {
+            List<ResellerCateg> dataList3 = excelReader.readExcelFileReseller(file.getInputStream());
+            service.saveAllReseller(dataList3);
             return ResponseEntity.ok("Fichier importé avec succès !");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
