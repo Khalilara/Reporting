@@ -1,6 +1,7 @@
 package com.demo.service;
 
 import com.demo.Model.CustumerCateg;
+import com.demo.Model.ProductCateg;
 import com.demo.Model.ResellerCateg;
 import com.demo.Model.SalesData;
 import org.springframework.stereotype.Service;
@@ -88,6 +89,25 @@ public class ExcelServiceReader {
         return dataList;
     }
 
+    public List<ProductCateg> readExcelFileProduct(InputStream inputStream) throws Exception {
+        List<ProductCateg> dataList = new ArrayList<>();
+        Workbook workbook = new XSSFWorkbook(inputStream);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) continue; // Ignorer l'en-tête
+            ProductCateg data = new ProductCateg();
+
+            data.setProductSubSub(getCellValue(row.getCell(0)));
+            data.setPoductType(getCellValue(row.getCell(1)));
+
+
+            dataList.add(data);
+        }
+
+        workbook.close();
+        return dataList;
+    }
 
     private String getCellValue(Cell cell) {
         return cell == null ? null : cell.toString().trim();
