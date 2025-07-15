@@ -1,9 +1,7 @@
 package com.demo.Controller;
 
-import com.demo.Model.CustumerCateg;
-import com.demo.Model.ProductCateg;
-import com.demo.Model.ResellerCateg;
-import com.demo.Model.SalesData;
+import com.demo.Model.*;
+import com.demo.Repository.PreparedDataRepository;
 import com.demo.service.SalesDataService;
 import com.demo.service.ExcelServiceReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/excel")
 public class ExcelUploadController {
@@ -22,10 +21,18 @@ public class ExcelUploadController {
 
     @Autowired
     private ExcelServiceReader excelReader;
+    @Autowired
+    private PreparedDataRepository preparedDataRepository;
 
     @GetMapping("/Hello")
     public ResponseEntity<String> Hello() {
         return ResponseEntity.ok("Hello depuis le contrôleur !");
+    }
+
+    @GetMapping("/perpared-data")
+    public ResponseEntity<List<PreparedData>> getPreparedData(){
+        List<PreparedData> data = preparedDataRepository.findAll();
+        return ResponseEntity.ok(data);
     }
 
     @PostMapping("/upload")

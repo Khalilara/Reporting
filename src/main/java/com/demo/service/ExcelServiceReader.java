@@ -99,7 +99,7 @@ public class ExcelServiceReader {
             ProductCateg data = new ProductCateg();
 
             data.setProductSubSub(getCellValue(row.getCell(0)));
-            data.setPoductType(getCellValue(row.getCell(1)));
+            data.setProductType(getCellValue(row.getCell(1)));
 
 
             dataList.add(data);

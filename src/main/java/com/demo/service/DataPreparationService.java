@@ -99,7 +99,7 @@ public class DataPreparationService {
             if (sales.getProdSubdinarySubdinary() != null) {
                 ProductCateg product = productMap.get(sales.getProdSubdinarySubdinary());
                 if (product != null) {
-                    prepared.setProductType(product.getPoductType());
+                    prepared.setProductType(product.getProductType());
                 }
             }
 

@@ -1,13 +1,7 @@
 package com.demo.service;
 
-import com.demo.Model.CustumerCateg;
-import com.demo.Model.ProductCateg;
-import com.demo.Model.ResellerCateg;
-import com.demo.Model.SalesData;
-import com.demo.Repository.CustomerCategRepository;
-import com.demo.Repository.ProductCategRepository;
-import com.demo.Repository.ResellerCategRepository;
-import com.demo.Repository.SalesDataRepository;
+import com.demo.Model.*;
+import com.demo.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +34,5 @@ public class SalesDataService {
     public void saveAllProduct(List<ProductCateg> dataList) {
         repositoryProduct.saveAll(dataList);
     }
-
 
 }

@@ -12,7 +12,7 @@ public class ProductCateg {
     private Long id;
 
     private String productSubSub;
-    private String PoductType;
+    private String ProductType;
 
     public Long getId() {
         return id;
@@ -30,11 +30,11 @@ public class ProductCateg {
         this.productSubSub = productSubSub;
     }
 
-    public String getPoductType() {
-        return PoductType;
+    public String getProductType() {
+        return ProductType;
     }
 
-    public void setPoductType(String poductType) {
-        PoductType = poductType;
+    public void setProductType(String productType) {
+        ProductType = productType;
     }
 }
