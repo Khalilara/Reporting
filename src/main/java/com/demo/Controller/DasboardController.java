@@ -32,6 +32,14 @@ public class DasboardController {
         Map<String, BigDecimal> distribution = dashboardService.getSmbDistributionByResellerTypName();
         return ResponseEntity.ok(distribution);
     }
+    @GetMapping("/ebt")
+    public ResponseEntity<  Map<String, BigDecimal> > getEbt() {
+        return ResponseEntity.ok(dashboardService.getCaEbt());
+    }
+    @GetMapping("/smb")
+    public ResponseEntity<  Map<String, BigDecimal> > getSmb() {
+        return ResponseEntity.ok(dashboardService.getCaSmb());
+    }
 
 
 }

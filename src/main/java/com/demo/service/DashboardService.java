@@ -6,6 +6,7 @@ import com.demo.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -42,7 +43,56 @@ public class DashboardService {
             Map.entry("Saphelec", new BigDecimal("18000")),
             Map.entry("ByLink", new BigDecimal("16000"))
     );
+    public  Map<String, BigDecimal>  getCaEbt() {
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal service = BigDecimal.ZERO;
+        BigDecimal knoxSw = BigDecimal.ZERO;
 
+        for (PreparedData salesData : preparedDataRepository.findAll()) {
+            if ("EBT".equalsIgnoreCase(salesData.getCustomerType())) {
+                BigDecimal revenue = salesData.getRevenue();
+                total = total.add(revenue);
+
+                String productType = salesData.getProductType();
+                if ("Service".equalsIgnoreCase(productType)) {
+                    service = service.add(revenue);
+                } else if ("Knox SW".equalsIgnoreCase(productType)) {
+                    knoxSw = knoxSw.add(revenue);
+                }
+            }
+        }
+
+        Map<String, BigDecimal> result = new HashMap<>();
+        result.put("total", total);
+        result.put("service", service);
+        result.put("knoxSw", knoxSw);
+        return result;
+    }
+    public  Map<String, BigDecimal>  getCaSmb() {
+        BigDecimal total = BigDecimal.ZERO;
+        BigDecimal service = BigDecimal.ZERO;
+        BigDecimal knoxSw = BigDecimal.ZERO;
+
+        for (PreparedData salesData : preparedDataRepository.findAll()) {
+            if ("SMB".equalsIgnoreCase(salesData.getCustomerType())) {
+                BigDecimal revenue = salesData.getRevenue();
+                total = total.add(revenue);
+
+                String productType = salesData.getProductType();
+                if ("Service".equalsIgnoreCase(productType)) {
+                    service = service.add(revenue);
+                } else if ("Knox SW".equalsIgnoreCase(productType)) {
+                    knoxSw = knoxSw.add(revenue);
+                }
+            }
+        }
+
+        Map<String, BigDecimal> result = new HashMap<>();
+        result.put("total", total);
+        result.put("service", service);
+        result.put("knoxSw", knoxSw);
+        return result;
+    }
 
     public List<ChannelRevenueDTO> getRevenueWithTargets() {
         Map<String, BigDecimal> revenueByChannel = new HashMap<>();
@@ -79,14 +129,15 @@ public class DashboardService {
         BigDecimal totalRevenue = BigDecimal.ZERO;
 
         for (PreparedData salesData : preparedDataRepository.findAll()) {
-            if ("SMB".equals(salesData.getCustomerType()) && salesData.getResellerTypeName() != null) {
+            if (salesData.getCustomerType() != null &&
+                    "SMB".equalsIgnoreCase(salesData.getCustomerType().trim()) &&
+                    salesData.getResellerTypeName() != null &&
+                    salesData.getRevenue() != null) {
+
                 BigDecimal revenue = salesData.getRevenue();
                 String typeName = salesData.getResellerTypeName();
 
-                // Accumuler le revenu total
                 totalRevenue = totalRevenue.add(revenue);
-
-                // Accumuler le revenu par type
                 revenueByType.put(
                         typeName,
                         revenueByType.getOrDefault(typeName, BigDecimal.ZERO).add(revenue)
@@ -94,7 +145,10 @@ public class DashboardService {
             }
         }
 
-        // Calculer les pourcentages
+        if (totalRevenue.compareTo(BigDecimal.ZERO) == 0) {
+            return Collections.emptyMap();
+        }
+
         Map<String, BigDecimal> percentageByType = new HashMap<>();
         for (Map.Entry<String, BigDecimal> entry : revenueByType.entrySet()) {
             BigDecimal percentage = entry.getValue()
@@ -105,6 +159,9 @@ public class DashboardService {
 
         return percentageByType;
     }
+
+
+
 
 
 }
