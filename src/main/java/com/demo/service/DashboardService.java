@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardService {
@@ -159,9 +160,45 @@ public class DashboardService {
 
         return percentageByType;
     }
+    public List<PreparedData> getTopDeals() {
+        List<PreparedData> allDeals = preparedDataRepository.findAll();
 
+        // Trier les deals par revenu décroissant (BigDecimal)
+        allDeals.sort((d1, d2) -> d2.getRevenue().compareTo(d1.getRevenue()));
 
+        // Retourner les 5 premiers
+        return allDeals.stream().limit(5).collect(Collectors.toList());
+    }
+    public Map<Integer, Map<String, Map<String, BigDecimal>>> getGlobalRevenueByYear() {
+        Map<Integer, Map<String, Map<String, BigDecimal>>> result = new HashMap<>();
 
+        for (PreparedData salesData : preparedDataRepository.findAll()) {
+            BigDecimal yearDecimal = salesData.getYear(); // ex: 2025.00
+            int year = yearDecimal.intValue(); // conversion en int
+
+            String month = salesData.getMonth(); // ex: "janv.", "févr.", etc.
+            BigDecimal revenue = salesData.getRevenue();
+            String customerType = salesData.getCustomerType();
+
+            // Initialiser les maps pour l'année si elles n'existent pas
+            result.putIfAbsent(year, new HashMap<>());
+            Map<String, Map<String, BigDecimal>> yearData = result.get(year);
+
+            yearData.putIfAbsent("Global SMB", new HashMap<>());
+            yearData.putIfAbsent("Global EBT", new HashMap<>());
+            yearData.putIfAbsent("Global Revenue", new HashMap<>());
+
+            if ("SMB".equals(customerType)) {
+                yearData.get("Global SMB").merge(month, revenue, BigDecimal::add);
+            } else {
+                yearData.get("Global EBT").merge(month, revenue, BigDecimal::add);
+            }
+
+            yearData.get("Global Revenue").merge(month, revenue, BigDecimal::add);
+        }
+
+        return result;
+    }
 
 
 }
