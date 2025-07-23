@@ -30,8 +30,8 @@ public class DasboardController {
     }
 
     @GetMapping("/smb-distribution")
-    public ResponseEntity<Map<String, BigDecimal>> getSmbDistribution() {
-        Map<String, BigDecimal> distribution = dashboardService.getSmbDistributionByResellerTypName();
+    public ResponseEntity<Map<String, Map<String, Object>>> getSmbDistribution() {
+        Map<String, Map<String, Object>> distribution = dashboardService.getSmbDistributionByResellerTypName();
         return ResponseEntity.ok(distribution);
     }
 

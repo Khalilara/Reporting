@@ -6,13 +6,9 @@ import com.demo.Repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+import java.util.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -125,41 +121,78 @@ public class DashboardService {
     }
 
 
-    public Map<String, BigDecimal> getSmbDistributionByResellerTypName() {
-        Map<String, BigDecimal> revenueByType = new HashMap<>();
-        BigDecimal totalRevenue = BigDecimal.ZERO;
+    public Map<String, Map<String, Object>> getSmbDistributionByResellerTypName() {
+        Map<String, BigDecimal> totalRevenueByReseller = new LinkedHashMap<>();
+        Map<String, BigDecimal> totalKnoxSWByReseller = new LinkedHashMap<>();
+        Map<String, BigDecimal> totalServiceByReseller = new LinkedHashMap<>();
 
+        // Étape 1 : collecte des données
         for (PreparedData salesData : preparedDataRepository.findAll()) {
             if (salesData.getCustomerType() != null &&
                     "SMB".equalsIgnoreCase(salesData.getCustomerType().trim()) &&
                     salesData.getResellerTypeName() != null &&
-                    salesData.getRevenue() != null) {
+                    salesData.getRevenue() != null &&
+                    salesData.getProductType() != null) {
 
+                String resellerType = salesData.getResellerTypeName();
                 BigDecimal revenue = salesData.getRevenue();
-                String typeName = salesData.getResellerTypeName();
+                String productType = salesData.getProductType().trim();
 
-                totalRevenue = totalRevenue.add(revenue);
-                revenueByType.put(
-                        typeName,
-                        revenueByType.getOrDefault(typeName, BigDecimal.ZERO).add(revenue)
+                // total par type de revendeur
+                totalRevenueByReseller.put(
+                        resellerType,
+                        totalRevenueByReseller.getOrDefault(resellerType, BigDecimal.ZERO).add(revenue)
                 );
+
+                // par produit : Knox SW / Service
+                if ("Knox SW".equalsIgnoreCase(productType)) {
+                    totalKnoxSWByReseller.put(
+                            resellerType,
+                            totalKnoxSWByReseller.getOrDefault(resellerType, BigDecimal.ZERO).add(revenue)
+                    );
+                } else if ("Service".equalsIgnoreCase(productType)) {
+                    totalServiceByReseller.put(
+                            resellerType,
+                            totalServiceByReseller.getOrDefault(resellerType, BigDecimal.ZERO).add(revenue)
+                    );
+                }
             }
         }
 
-        if (totalRevenue.compareTo(BigDecimal.ZERO) == 0) {
+        // Étape 2 : somme des 3 revenus retenus pour le pourcentage
+        BigDecimal localTotalRevenue = totalRevenueByReseller.values().stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (localTotalRevenue.compareTo(BigDecimal.ZERO) == 0) {
             return Collections.emptyMap();
         }
 
-        Map<String, BigDecimal> percentageByType = new HashMap<>();
-        for (Map.Entry<String, BigDecimal> entry : revenueByType.entrySet()) {
-            BigDecimal percentage = entry.getValue()
+        // Étape 3 : création du résultat
+        Map<String, Map<String, Object>> result = new LinkedHashMap<>();
+
+        for (String resellerType : totalRevenueByReseller.keySet()) {
+            BigDecimal resellerRevenue = totalRevenueByReseller.get(resellerType);
+
+            BigDecimal percentage = resellerRevenue
                     .multiply(BigDecimal.valueOf(100))
-                    .divide(totalRevenue, 2, RoundingMode.HALF_UP);
-            percentageByType.put(entry.getKey(), percentage);
+                    .divide(localTotalRevenue, 2, RoundingMode.HALF_UP);
+
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalRevenue", resellerRevenue);
+            stats.put("percentage", percentage);
+
+            Map<String, BigDecimal> productBreakdown = new HashMap<>();
+            productBreakdown.put("Knox SW", totalKnoxSWByReseller.getOrDefault(resellerType, BigDecimal.ZERO));
+            productBreakdown.put("Service", totalServiceByReseller.getOrDefault(resellerType, BigDecimal.ZERO));
+
+            stats.put("revenueByProductType", productBreakdown);
+
+            result.put(resellerType, stats);
         }
 
-        return percentageByType;
+        return result;
     }
+
     public List<PreparedData> getTopDeals() {
         List<PreparedData> allDeals = preparedDataRepository.findAll();
 
