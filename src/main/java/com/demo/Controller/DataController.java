@@ -121,5 +121,25 @@ public class DataController {
                     .body("Une erreur est survenue lors de la création du customer: " + e.getMessage());
         }
     }
+    @GetMapping("/resellers/missing")
+    public ResponseEntity<List<String>> getSecondResellersWithMissingInfo() {
+        try {
+            List<String> resellers = service.getSecondResellersWithMissingInfo();
+            return ResponseEntity.ok(resellers);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+}
+    @GetMapping("/customers/missing")
+    public ResponseEntity<List<String>> getEndCustomersWithMissingType() {
+        try {
+            List<String> customers = service.getEndCustomersWithMissingType();
+            return ResponseEntity.ok(customers);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
 }
 

@@ -20,6 +20,8 @@ public class SalesDataService {
     private ProductCategRepository repositoryProduct;
     @Autowired
     private DataPreparationService dataPreparationService;
+    @Autowired
+    private PreparedDataRepository preparedDataRepository;
 
     public void saveAll(List<SalesData> dataList) {
         repository.saveAll(dataList);
@@ -33,6 +35,12 @@ public class SalesDataService {
     }
     public void saveAllProduct(List<ProductCateg> dataList) {
         repositoryProduct.saveAll(dataList);
+    }
+    public List<String> getSecondResellersWithMissingInfo() {
+        return preparedDataRepository.findDistinctSecondResellersWithMissingInfo();
+    }
+    public List<String> getEndCustomersWithMissingType() {
+        return preparedDataRepository.findDistinctEndCustomersWithMissingType();
     }
 
 }
