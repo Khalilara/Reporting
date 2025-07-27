@@ -1,17 +1,17 @@
-package com.demo.Controller;
+package com.demo.Controller.Channel;
 
 
-import com.demo.Model.CustumerCateg;
-import com.demo.Model.PreparedData;
-import com.demo.Model.ProductCateg;
-import com.demo.Model.ResellerCateg;
-import com.demo.Repository.CustomerCategRepository;
-import com.demo.Repository.PreparedDataRepository;
-import com.demo.Repository.ProductCategRepository;
-import com.demo.Repository.ResellerCategRepository;
-import com.demo.service.DataPreparationService;
-import com.demo.service.ExcelServiceReader;
-import com.demo.service.SalesDataService;
+import com.demo.Model.Channel.CustumerCateg;
+import com.demo.Model.Channel.PreparedData;
+import com.demo.Model.Channel.ProductCateg;
+import com.demo.Model.Channel.ResellerCateg;
+import com.demo.Repository.Channel.CustomerCategRepository;
+import com.demo.Repository.Channel.PreparedDataRepository;
+import com.demo.Repository.Channel.ProductCategRepository;
+import com.demo.Repository.Channel.ResellerCategRepository;
+import com.demo.service.Channel.DataPreparationService;
+import com.demo.service.Channel.ExcelServiceReader;
+import com.demo.service.Channel.SalesDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +44,6 @@ public class DataController {
         List<PreparedData> data = preparedDataRepository.findAll();
         return ResponseEntity.ok(data);
     }
-
     @PostMapping("/post/customer")
     public ResponseEntity<?> createCustomer(@RequestBody CustumerCateg customer) {
         try {

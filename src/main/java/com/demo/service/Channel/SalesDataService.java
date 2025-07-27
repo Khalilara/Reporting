@@ -1,7 +1,10 @@
-package com.demo.service;
+package com.demo.service.Channel;
 
-import com.demo.Model.*;
-import com.demo.Repository.*;
+import com.demo.Model.Channel.CustumerCateg;
+import com.demo.Model.Channel.ProductCateg;
+import com.demo.Model.Channel.ResellerCateg;
+import com.demo.Model.Channel.SalesData;
+import com.demo.Repository.Channel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

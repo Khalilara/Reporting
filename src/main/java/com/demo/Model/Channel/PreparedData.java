@@ -1,4 +1,4 @@
-package com.demo.Model;
+package com.demo.Model.Channel;
 
 import jakarta.persistence.*;
 

@@ -1,9 +1,9 @@
-package com.demo.Controller;
+package com.demo.Controller.Channel;
 
-import com.demo.Model.*;
-import com.demo.Repository.PreparedDataRepository;
-import com.demo.service.SalesDataService;
-import com.demo.service.ExcelServiceReader;
+import com.demo.Model.Channel.*;
+import com.demo.Repository.Channel.PreparedDataRepository;
+import com.demo.service.Channel.SalesDataService;
+import com.demo.service.Channel.ExcelServiceReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

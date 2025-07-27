@@ -1,9 +1,9 @@
-package com.demo.Controller;
+package com.demo.Controller.Channel;
 
 
-import com.demo.DTO.ChannelRevenueDTO;
-import com.demo.Model.PreparedData;
-import com.demo.service.DashboardService;
+import com.demo.DTO.Channel.ChannelRevenueDTO;
+import com.demo.Model.Channel.PreparedData;
+import com.demo.service.Channel.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;

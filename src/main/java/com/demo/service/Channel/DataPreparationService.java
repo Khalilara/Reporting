@@ -1,7 +1,7 @@
-package com.demo.service;
+package com.demo.service.Channel;
 
-import com.demo.Model.*;
-import com.demo.Repository.*;
+import com.demo.Model.Channel.*;
+import com.demo.Repository.Channel.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,6 +92,8 @@ public class DataPreparationService {
                 CustumerCateg customer = customerMap.get(sales.getEndCustomer());
                 if (customer != null) {
                     prepared.setCustomerType(customer.getCategory());
+                }else{
+                    prepared.setCustomerType("EBT");
                 }
             }
 
@@ -109,5 +111,7 @@ public class DataPreparationService {
         preparedDataRepository.saveAll(preparedDataList);
     }
 
-
+    public List<String> getSecondResellersWithMissingInfo() {
+        return preparedDataRepository.findDistinctSecondResellersWithMissingInfo();
+    }
 }

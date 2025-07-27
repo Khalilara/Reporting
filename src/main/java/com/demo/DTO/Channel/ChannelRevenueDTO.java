@@ -1,4 +1,4 @@
-package com.demo.DTO;
+package com.demo.DTO.Channel;
 
 import java.math.BigDecimal;
 

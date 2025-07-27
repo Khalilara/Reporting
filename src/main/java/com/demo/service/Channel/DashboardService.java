@@ -1,8 +1,8 @@
-package com.demo.service;
+package com.demo.service.Channel;
 
-import com.demo.DTO.ChannelRevenueDTO;
-import com.demo.Model.PreparedData;
-import com.demo.Repository.*;
+import com.demo.DTO.Channel.ChannelRevenueDTO;
+import com.demo.Model.Channel.PreparedData;
+import com.demo.Repository.Channel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

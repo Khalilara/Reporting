@@ -1,9 +1,9 @@
-package com.demo.service;
+package com.demo.service.Channel;
 
-import com.demo.Model.CustumerCateg;
-import com.demo.Model.ProductCateg;
-import com.demo.Model.ResellerCateg;
-import com.demo.Model.SalesData;
+import com.demo.Model.Channel.CustumerCateg;
+import com.demo.Model.Channel.ProductCateg;
+import com.demo.Model.Channel.ResellerCateg;
+import com.demo.Model.Channel.SalesData;
 import org.springframework.stereotype.Service;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

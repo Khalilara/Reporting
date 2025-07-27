@@ -1,6 +1,6 @@
-package com.demo.Repository;
+package com.demo.Repository.Channel;
 
-import com.demo.Model.PreparedData;
+import com.demo.Model.Channel.PreparedData;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
