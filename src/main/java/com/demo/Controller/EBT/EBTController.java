@@ -107,14 +107,21 @@ public class EBTController {
                     case "quarter":
                         existingTableau.setQuarter((String) value);
                         break;
-                    case "statut":
-                    case "status": // accepte les deux
-                        try {
-                            existingTableau.setStatus(Status.valueOf(((String) value)
-                                    .toUpperCase()
-                                    .replace(" ", "_")));
-                        } catch (IllegalArgumentException e) {
-                            throw new IllegalArgumentException("Statut invalide: " + value);
+                    case "status": // Unifié sur "status" seulement
+                        if (value == null) {
+                            existingTableau.setStatus(null);
+                        } else {
+                            try {
+                                String statusValue = value.toString().trim();
+                                if (statusValue.isEmpty()) {
+                                    existingTableau.setStatus(null);
+                                } else {
+                                    existingTableau.setStatus(Status.valueOf(statusValue.toUpperCase()));
+                                }
+                            } catch (IllegalArgumentException e) {
+                                throw new IllegalArgumentException("Statut invalide: " + value + ". Statuts valides: " +
+                                        java.util.Arrays.toString(Status.values()));
+                            }
                         }
                         break;
                     default:
@@ -133,12 +140,19 @@ public class EBTController {
                     .body("Erreur lors de la mise à jour partielle: " + e.getMessage());
         }
     }
-
-
-    @DeleteMapping("/delete")
+    @DeleteMapping("/delete/{id}")  // Correction: ajout de /{id}
     public ResponseEntity<?> deleteEbtTableau(@PathVariable Long id) {
-        tableauEbtRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+        try {
+            if (!tableauEbtRepository.existsById(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Tableau EBT non trouvé avec l'ID: " + id);
+            }
+            tableauEbtRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de la suppression: " + e.getMessage());
+        }
     }
 
 }

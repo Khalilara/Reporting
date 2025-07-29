@@ -1,6 +1,5 @@
 package com.demo.Model.EBT;
 
-
 import jakarta.persistence.*;
 
 @Entity
@@ -12,53 +11,48 @@ public class TableauEBT {
 
     @Column
     private String type;
+
     @Column
     private String probabilite;
+
     @Column
     private String client;
+
     @Column
     private String solution;
+
     @Column
     private double quantite;
+
     @Column
     private double prix;
+
     @Column
     private double chiffreAffaire;
+
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = true)
     private Status status;
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public double getChiffreAffaire() {
-        return chiffreAffaire;
-    }
-
-    public void setChiffreAffaire(double chiffreAffaire) {
-        this.chiffreAffaire = chiffreAffaire;
-    }
 
     @Column
     private String kam;
+
     @Column
     private String info;
+
     @Column
     private String quarter;
 
-
+    // Constructeurs
     public TableauEBT() {}
 
-    public String getQuarter() {
-        return quarter;
+    // Getters et Setters
+    public Long getId() {
+        return id;
     }
 
-    public void setQuarter(String quarter) {
-        this.quarter = quarter;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getType() {
@@ -109,6 +103,22 @@ public class TableauEBT {
         this.prix = prix;
     }
 
+    public double getChiffreAffaire() {
+        return chiffreAffaire;
+    }
+
+    public void setChiffreAffaire(double chiffreAffaire) {
+        this.chiffreAffaire = chiffreAffaire;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     public String getKam() {
         return kam;
     }
@@ -125,11 +135,29 @@ public class TableauEBT {
         this.info = info;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public String getQuarter() {
+        return quarter;
     }
 
-    public Long getId() {
-        return id;
+    public void setQuarter(String quarter) {
+        this.quarter = quarter;
+    }
+
+    @Override
+    public String toString() {
+        return "TableauEBT{" +
+                "id=" + id +
+                ", type='" + type + '\'' +
+                ", probabilite='" + probabilite + '\'' +
+                ", client='" + client + '\'' +
+                ", solution='" + solution + '\'' +
+                ", quantite=" + quantite +
+                ", prix=" + prix +
+                ", chiffreAffaire=" + chiffreAffaire +
+                ", status=" + status +
+                ", kam='" + kam + '\'' +
+                ", info='" + info + '\'' +
+                ", quarter='" + quarter + '\'' +
+                '}';
     }
 }
