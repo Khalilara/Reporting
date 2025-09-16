@@ -2,6 +2,8 @@ package com.demo.service.Channel;
 
 import com.demo.DTO.Channel.ChannelRevenueDTO;
 import com.demo.Model.Channel.PreparedData;
+import com.demo.Model.Channel.ResellerCateg;
+import com.demo.Model.Channel.TopReseller;
 import com.demo.Repository.Channel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,23 +25,41 @@ public class DashboardService {
     private ProductCategRepository productCategRepository;
     @Autowired
     private PreparedDataRepository preparedDataRepository;
-    private static final Map<String, BigDecimal> quarterlyTargets = Map.ofEntries(
-            Map.entry("Econocom", new BigDecimal("50000")),
-            Map.entry("Inmac", new BigDecimal("40000")),
-            Map.entry("HELIAQ", new BigDecimal("10000")),
-            Map.entry("Computacenter", new BigDecimal("60000")),
-            Map.entry("SFR", new BigDecimal("30000")),
-            Map.entry("Orange", new BigDecimal("80000")),
-            Map.entry("BOUYGUES", new BigDecimal("25000")),
-            Map.entry("ILCO", new BigDecimal("15000")),
-            Map.entry("KOESIO", new BigDecimal("20000")),
-            Map.entry("SCC", new BigDecimal("70000")),
-            Map.entry("LAFI", new BigDecimal("35000")),
-            Map.entry("CFI", new BigDecimal("20000")),
-            Map.entry("Bechtle", new BigDecimal("30000")),
-            Map.entry("Saphelec", new BigDecimal("18000")),
-            Map.entry("ByLink", new BigDecimal("16000"))
-    );
+
+    @Autowired
+    private TopResellerRepository topResellerRepository;
+
+    public void updateTopResellerTarget(String name, BigDecimal target) {
+        TopReseller reseller = topResellerRepository.findByName(name)
+                .orElseThrow(() -> new RuntimeException("TopReseller non trouvé"));
+
+        reseller.setTarget(target);
+        topResellerRepository.save(reseller);
+    }
+    public List<TopReseller> getTopResellers() {
+        return topResellerRepository.findAll();
+    }
+    public List<ChannelRevenueDTO> getRevenueWithTargets() {
+        Map<String, BigDecimal> revenueByChannel = new HashMap<>();
+        List<TopReseller> topResellers = topResellerRepository.findAll();
+
+        for (PreparedData salesData : preparedDataRepository.findAll()) {
+            String channel = salesData.getChannel();
+            BigDecimal revenue = salesData.getRevenue();
+
+            if (channel != null && topResellers.stream().anyMatch(r -> r.getName().equals(channel))) {
+                revenueByChannel.merge(channel, revenue, BigDecimal::add);
+            }
+        }
+
+        return topResellers.stream()
+                .map(r -> new ChannelRevenueDTO(
+                        r.getName(),
+                        revenueByChannel.getOrDefault(r.getName(), BigDecimal.ZERO),
+                        r.getTarget()
+                ))
+                .collect(Collectors.toList());
+    }
     public  Map<String, BigDecimal>  getCaEbt() {
         BigDecimal total = BigDecimal.ZERO;
         BigDecimal service = BigDecimal.ZERO;
@@ -88,35 +108,6 @@ public class DashboardService {
         result.put("total", total);
         result.put("service", service);
         result.put("knoxSw", knoxSw);
-        return result;
-    }
-
-    public List<ChannelRevenueDTO> getRevenueWithTargets() {
-        Map<String, BigDecimal> revenueByChannel = new HashMap<>();
-
-        List<String> allowedChannels = new ArrayList<>(quarterlyTargets.keySet());
-
-        for (PreparedData salesData : preparedDataRepository.findAll()) {
-            String channel = salesData.getChannel();
-            BigDecimal revenue = salesData.getRevenue();
-
-            if (channel != null && allowedChannels.contains(channel)) {
-                revenueByChannel.put(
-                        channel,
-                        revenueByChannel.getOrDefault(channel, BigDecimal.ZERO).add(revenue)
-                );
-            }
-        }
-
-        List<ChannelRevenueDTO> result = new ArrayList<>();
-        for (String channel : revenueByChannel.keySet()) {
-            result.add(new ChannelRevenueDTO(
-                    channel,
-                    revenueByChannel.get(channel),
-                    quarterlyTargets.get(channel)
-            ));
-        }
-
         return result;
     }
 
@@ -222,16 +213,29 @@ public class DashboardService {
             yearData.putIfAbsent("Global Revenue", new HashMap<>());
 
             if ("SMB".equals(customerType)) {
-                yearData.get("Global SMB").merge(month, revenue, BigDecimal::add);
+                yearData.get("Global SMB").merge(month, revenue, BigDecimal ::add);
             } else {
-                yearData.get("Global EBT").merge(month, revenue, BigDecimal::add);
+                yearData.get("Global EBT").merge(month, revenue, BigDecimal ::add);
             }
 
-            yearData.get("Global Revenue").merge(month, revenue, BigDecimal::add);
+            yearData.get("Global Revenue").merge(month, revenue, BigDecimal ::add);
         }
 
         return result;
     }
+
+    public List<String> getChannelResellers() {
+        List<String> channels  = new ArrayList<>();
+        for (ResellerCateg elmt : resellerCategRepository.findAll()) {
+            channels.add(elmt.getChannel());
+        }
+        return channels;
+    }
+
+    public void createTopReseller(TopReseller topreseller){
+        topResellerRepository.save(topreseller);
+    }
+
 
 
 }

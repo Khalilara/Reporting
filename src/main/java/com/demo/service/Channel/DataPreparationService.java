@@ -92,8 +92,6 @@ public class DataPreparationService {
                 CustumerCateg customer = customerMap.get(sales.getEndCustomer());
                 if (customer != null) {
                     prepared.setCustomerType(customer.getCategory());
-                }else{
-                    prepared.setCustomerType("EBT");
                 }
             }
 

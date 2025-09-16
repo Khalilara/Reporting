@@ -3,17 +3,18 @@ package com.demo.Controller.Channel;
 
 import com.demo.DTO.Channel.ChannelRevenueDTO;
 import com.demo.Model.Channel.PreparedData;
+import com.demo.Model.Channel.TopReseller;
 import com.demo.service.Channel.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -21,6 +22,7 @@ import java.util.Map;
 public class DasboardController {
     @Autowired
     DashboardService dashboardService;
+
 
     @GetMapping("/channel")
     public ResponseEntity<List<ChannelRevenueDTO>> channel() {
@@ -53,5 +55,49 @@ public class DasboardController {
         return ResponseEntity.ok(dashboardService.getGlobalRevenueByYear());
     }
 
+    @PostMapping("/create-reseller")
+    public ResponseEntity<?> createReseller(@RequestBody TopReseller topReseller) {
+        List<String> channels = dashboardService.getChannelResellers();
+
+        if (!channels.contains(topReseller.getName())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Erreur : ce canal n'existe pas !");
+        }
+
+        dashboardService.createTopReseller(topReseller);
+        return ResponseEntity.ok("Canal créé avec succès");
+    }
+    @GetMapping("/reseller-names")
+    public ResponseEntity<List<String>> getResellerNames() {
+        List<String> channels = dashboardService.getChannelResellers();
+
+        // Vérification null safe
+        if (channels == null) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        // Filtrer les null, vides, et supprimer les doublons
+        List<String> filteredChannels = channels.stream()
+                .filter(Objects::nonNull) // Enlever les null
+                .map(String::trim) // Nettoyer les espaces
+                .filter(channel -> !channel.isEmpty()) // Enlever les chaînes vides
+                .distinct() // Enlever les doublons
+                .sorted() // Trier alphabétiquement
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(filteredChannels);
+    }
+    @PutMapping("/modifier-target")
+    public ResponseEntity<?> modifierTarget(@RequestParam String topResellerName, @RequestParam BigDecimal target) {
+        try {
+            dashboardService.updateTopResellerTarget(topResellerName, target);
+            return ResponseEntity.ok("Target Updated Successfully");
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Erreur lors de la mise à jour : " + e.getMessage());
+        }
+    }
 
 }
