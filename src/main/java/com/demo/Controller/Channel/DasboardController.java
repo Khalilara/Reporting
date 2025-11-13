@@ -24,11 +24,12 @@ public class DasboardController {
     DashboardService dashboardService;
 
 
-    @GetMapping("/channel")
-    public ResponseEntity<List<ChannelRevenueDTO>> channel() {
-        List<ChannelRevenueDTO> data = dashboardService.getRevenueWithTargets();
-        return ResponseEntity.ok(data);
-    }
+ @GetMapping("/channel")
+public ResponseEntity<List<Map<String, Object>>> channel() {
+    List<Map<String, Object>> data = dashboardService.getRevenueWithTargetsDetailed();
+    return ResponseEntity.ok(data);
+}
+
 
     @GetMapping("/smb-distribution")
     public ResponseEntity<Map<String, Map<String, Object>>> getSmbDistribution() {

@@ -39,27 +39,60 @@ public class DashboardService {
     public List<TopReseller> getTopResellers() {
         return topResellerRepository.findAll();
     }
-    public List<ChannelRevenueDTO> getRevenueWithTargets() {
-        Map<String, BigDecimal> revenueByChannel = new HashMap<>();
-        List<TopReseller> topResellers = topResellerRepository.findAll();
+public List<Map<String, Object>> getRevenueWithTargetsDetailed() {
+    List<TopReseller> topResellers = topResellerRepository.findAll();
+    Map<String, Map<String, Map<String, BigDecimal>>> detailByChannel = new HashMap<>();
 
-        for (PreparedData salesData : preparedDataRepository.findAll()) {
-            String channel = salesData.getChannel();
-            BigDecimal revenue = salesData.getRevenue();
-
-            if (channel != null && topResellers.stream().anyMatch(r -> r.getName().equals(channel))) {
-                revenueByChannel.merge(channel, revenue, BigDecimal::add);
-            }
-        }
-
-        return topResellers.stream()
-                .map(r -> new ChannelRevenueDTO(
-                        r.getName(),
-                        revenueByChannel.getOrDefault(r.getName(), BigDecimal.ZERO),
-                        r.getTarget()
-                ))
-                .collect(Collectors.toList());
+    // Initialisation structure channel/type/segment
+    for (TopReseller reseller : topResellers) {
+        detailByChannel.put(reseller.getName(), new HashMap<>());
+        detailByChannel.get(reseller.getName()).put("knoxSW", new HashMap<>());
+        detailByChannel.get(reseller.getName()).put("service", new HashMap<>());
+        detailByChannel.get(reseller.getName()).get("knoxSW").put("smb", BigDecimal.ZERO);
+        detailByChannel.get(reseller.getName()).get("knoxSW").put("ebt", BigDecimal.ZERO);
+        detailByChannel.get(reseller.getName()).get("service").put("smb", BigDecimal.ZERO);
+        detailByChannel.get(reseller.getName()).get("service").put("ebt", BigDecimal.ZERO);
     }
+
+    // Agrégation
+    for (PreparedData salesData : preparedDataRepository.findAll()) {
+        String channel = salesData.getChannel();
+        String productType = salesData.getProductType();
+        String customerType = salesData.getCustomerType();
+        BigDecimal revenue = salesData.getRevenue();
+
+        if (channel == null || productType == null || customerType == null) continue;
+        if (!detailByChannel.containsKey(channel)) continue;
+
+        String prodKey = productType.equalsIgnoreCase("Knox SW") ? "knoxSW" :
+                         productType.equalsIgnoreCase("Service") ? "service" : null;
+        String custKey = customerType.equalsIgnoreCase("SMB") ? "smb" :
+                         customerType.equalsIgnoreCase("EBT") ? "ebt" : null;
+
+        if (prodKey != null && custKey != null) {
+            Map<String, BigDecimal> prodMap = detailByChannel.get(channel).get(prodKey);
+            prodMap.put(custKey, prodMap.get(custKey).add(revenue));
+        }
+    }
+
+    // Construction de la liste, insertion dans l'ordre désiré
+    List<Map<String, Object>> result = new ArrayList<>();
+    for (TopReseller reseller : topResellers) {
+        Map<String, Object> entry = new LinkedHashMap<>();
+        entry.put("channel", reseller.getName());
+        BigDecimal totalRevenue = detailByChannel.get(reseller.getName())
+                .values().stream()
+                .flatMap(m -> m.values().stream())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        entry.put("revenue", totalRevenue);
+        entry.put("target", reseller.getTarget());
+        entry.put("knoxSW", detailByChannel.get(reseller.getName()).get("knoxSW"));
+        entry.put("service", detailByChannel.get(reseller.getName()).get("service"));
+        result.add(entry);
+    }
+    return result;
+}
+
     public  Map<String, BigDecimal>  getCaEbt() {
         BigDecimal total = BigDecimal.ZERO;
         BigDecimal service = BigDecimal.ZERO;
