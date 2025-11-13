@@ -216,6 +216,57 @@ public List<Map<String, Object>> getRevenueWithTargetsDetailed() {
 
         return result;
     }
+public Map<String, List<BigDecimal>> getRevenueByProductTypePerReseller() {
+    Map<String, BigDecimal> totalKnoxSWByReseller = new LinkedHashMap<>();
+    Map<String, BigDecimal> totalServiceByReseller = new LinkedHashMap<>();
+
+    List<String> resellerOrder = new ArrayList<>();
+
+    // Étape 1 : collecte des données
+    for (PreparedData salesData : preparedDataRepository.findAll()) {
+        if (salesData.getCustomerType() != null &&
+                "SMB".equalsIgnoreCase(salesData.getCustomerType().trim()) &&
+                salesData.getResellerTypeName() != null &&
+                salesData.getRevenue() != null &&
+                salesData.getProductType() != null) {
+
+            String resellerType = salesData.getResellerTypeName().trim();
+            BigDecimal revenue = salesData.getRevenue();
+            String productType = salesData.getProductType().trim();
+
+            if (!resellerOrder.contains(resellerType)) {
+                resellerOrder.add(resellerType);
+            }
+
+            if ("Knox SW".equalsIgnoreCase(productType)) {
+                totalKnoxSWByReseller.put(
+                        resellerType,
+                        totalKnoxSWByReseller.getOrDefault(resellerType, BigDecimal.ZERO).add(revenue)
+                );
+            } else if ("Service".equalsIgnoreCase(productType)) {
+                totalServiceByReseller.put(
+                        resellerType,
+                        totalServiceByReseller.getOrDefault(resellerType, BigDecimal.ZERO).add(revenue)
+                );
+            }
+        }
+    }
+
+    // Étape 2 : création du résultat
+    Map<String, List<BigDecimal>> result = new LinkedHashMap<>();
+    List<BigDecimal> knoxSWList = new ArrayList<>();
+    List<BigDecimal> serviceList = new ArrayList<>();
+
+    for (String reseller : resellerOrder) {
+        knoxSWList.add(totalKnoxSWByReseller.getOrDefault(reseller, BigDecimal.ZERO));
+        serviceList.add(totalServiceByReseller.getOrDefault(reseller, BigDecimal.ZERO));
+    }
+
+    result.put("Knox SW", knoxSWList);
+    result.put("Service", serviceList);
+
+    return result;
+}
 
     public List<PreparedData> getTopDeals() {
         List<PreparedData> allDeals = preparedDataRepository.findAll();
@@ -269,6 +320,55 @@ public List<Map<String, Object>> getRevenueWithTargetsDetailed() {
         topResellerRepository.save(topreseller);
     }
 
+public Map<String, Object> getRevenueByCustomerTypeAndResellerWithNames() {
+    Map<String, BigDecimal> ebtRevenueByReseller = new LinkedHashMap<>();
+    Map<String, BigDecimal> smbRevenueByReseller = new LinkedHashMap<>();
+    Set<String> resellerOrder = new LinkedHashSet<>();
+    BigDecimal globalRevenue = BigDecimal.ZERO;
+
+    // Étape 1 : collecte des données
+    for (PreparedData salesData : preparedDataRepository.findAll()) {
+        if (salesData.getCustomerType() != null &&
+                salesData.getResellerTypeName() != null &&
+                salesData.getRevenue() != null) {
+
+            String customerType = salesData.getCustomerType().trim();
+            String resellerType = salesData.getResellerTypeName().trim();
+            BigDecimal revenue = salesData.getRevenue();
+
+            resellerOrder.add(resellerType);
+            globalRevenue = globalRevenue.add(revenue);
+
+            if ("EBT".equalsIgnoreCase(customerType)) {
+                ebtRevenueByReseller.put(
+                        resellerType,
+                        ebtRevenueByReseller.getOrDefault(resellerType, BigDecimal.ZERO).add(revenue)
+                );
+            } else if ("SMB".equalsIgnoreCase(customerType)) {
+                smbRevenueByReseller.put(
+                        resellerType,
+                        smbRevenueByReseller.getOrDefault(resellerType, BigDecimal.ZERO).add(revenue)
+                );
+            }
+        }
+    }
+
+    // Étape 2 : construire des maps avec noms des revendeurs
+    Map<String, BigDecimal> ebtMap = new LinkedHashMap<>();
+    Map<String, BigDecimal> smbMap = new LinkedHashMap<>();
+    for (String reseller : resellerOrder) {
+        ebtMap.put(reseller, ebtRevenueByReseller.getOrDefault(reseller, BigDecimal.ZERO));
+        smbMap.put(reseller, smbRevenueByReseller.getOrDefault(reseller, BigDecimal.ZERO));
+    }
+
+    // Étape 3 : construire le résultat final
+    Map<String, Object> result = new LinkedHashMap<>();
+    result.put("EBT", ebtMap);
+    result.put("SMB", smbMap);
+    result.put("GlobalRevenue", globalRevenue);
+
+    return result;
+}
 
 
 }

@@ -9,6 +9,7 @@ import com.demo.Repository.Channel.CustomerCategRepository;
 import com.demo.Repository.Channel.PreparedDataRepository;
 import com.demo.Repository.Channel.ProductCategRepository;
 import com.demo.Repository.Channel.ResellerCategRepository;
+import com.demo.service.Channel.DashboardService;
 import com.demo.service.Channel.DataPreparationService;
 import com.demo.service.Channel.ExcelServiceReader;
 import com.demo.service.Channel.SalesDataService;
@@ -17,7 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
-
+import java.math.BigDecimal;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -38,6 +39,8 @@ public class DataController {
     private ProductCategRepository productCategRepository;
     @Autowired
     private DataPreparationService dataPreparationService;
+    @Autowired
+    private DashboardService dashboardService;
 
 
     @GetMapping("/perpared-data")
@@ -172,7 +175,12 @@ public class DataController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Erreur : " + e.getMessage());
     }
-}
+   }
+    @GetMapping("/revenue-by-customer")
+      public ResponseEntity<Map<String, Object>> getRevenueByCustomerTypeAndResellerWithNames() {
+        Map<String, Object> data = dashboardService.getRevenueByCustomerTypeAndResellerWithNames();
+        return ResponseEntity.ok(data);
+    }
 
 }
 
