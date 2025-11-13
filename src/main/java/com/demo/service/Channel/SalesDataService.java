@@ -45,5 +45,4 @@ public class SalesDataService {
     public List<String> getEndCustomersWithMissingType() {
         return preparedDataRepository.findDistinctEndCustomersWithMissingType();
     }
-
 }

@@ -112,4 +112,11 @@ public class DataPreparationService {
     public List<String> getSecondResellersWithMissingInfo() {
         return preparedDataRepository.findDistinctSecondResellersWithMissingInfo();
     }
+     public List<String> getEverythingMissing(){
+        return preparedDataRepository.findDealEverythingMissing();
+    }
+     @Transactional
+    public int updateResellerData(String reseller, String secondReseller, String resellerTypeName) {
+        return preparedDataRepository.updateResellerFields(reseller, secondReseller, resellerTypeName);
+    }
 }

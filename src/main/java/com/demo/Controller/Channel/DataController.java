@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 
@@ -140,5 +141,38 @@ public class DataController {
                     .body(null);
         }
     }
+    @GetMapping("/all/missing")
+    public ResponseEntity<List<String>> getEveryThingMissing(){
+        try{
+            List<String> deals = dataPreparationService.getEverythingMissing();
+            return ResponseEntity.ok(deals);
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body(null);
+        }
+    }
+    @PostMapping("/resellers/update")
+    public ResponseEntity<String> updateResellerData(@RequestBody Map<String, String> payload) {
+    try {
+        String reseller = payload.get("reseller");
+        String secondReseller = payload.get("secondReseller");
+        String resellerTypeName = payload.get("resellerTypeName");
+
+        int updated = dataPreparationService.updateResellerData(reseller, secondReseller, resellerTypeName);
+
+        if (updated > 0) {
+            return ResponseEntity.ok("Reseller mis à jour avec succès !");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Aucun enregistrement trouvé pour ce reseller.");
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Erreur : " + e.getMessage());
+    }
+}
+
 }
 
