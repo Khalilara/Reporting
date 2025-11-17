@@ -26,7 +26,12 @@ public class SalesDataService {
     @Autowired
     private PreparedDataRepository preparedDataRepository;
 
-    public void saveAll(List<SalesData> dataList) {
+     public void saveAll(List<SalesData> dataList) {
+        // Réinitialiser les tables avant de sauvegarder
+        repository.deleteAll(); // Vide la table sales_data
+        preparedDataRepository.deleteAll(); // Vide la table prepared_data
+        
+        // Sauvegarde les nouvelles données
         repository.saveAll(dataList);
         dataPreparationService.prepareData();
     }
