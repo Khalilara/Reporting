@@ -3,6 +3,7 @@ package com.demo.Controller.Channel;
 import com.demo.Model.Channel.*;
 import com.demo.Repository.Channel.PreparedDataRepository;
 import com.demo.service.Channel.SalesDataService;
+import com.demo.service.Channel.DataPreparationService;
 import com.demo.service.Channel.ExcelServiceReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/excel")
 public class ExcelUploadController {
@@ -23,6 +23,8 @@ public class ExcelUploadController {
     private ExcelServiceReader excelReader;
     @Autowired
     private PreparedDataRepository preparedDataRepository;
+    @Autowired
+    private DataPreparationService dataserviceprepared;
 
     @GetMapping("/Hello")
     public ResponseEntity<String> Hello() {
@@ -50,6 +52,7 @@ public class ExcelUploadController {
         try {
             List<CustumerCateg> dataList2 = excelReader.readExcelFile2(file.getInputStream());
             service.saveAll2(dataList2);
+            dataserviceprepared.prepareData();
             return ResponseEntity.ok("Fichier importé avec succès !");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
@@ -60,6 +63,7 @@ public class ExcelUploadController {
         try {
             List<ResellerCateg> dataList3 = excelReader.readExcelFileReseller(file.getInputStream());
             service.saveAllReseller(dataList3);
+            dataserviceprepared.prepareData();
             return ResponseEntity.ok("Fichier importé avec succès !");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());

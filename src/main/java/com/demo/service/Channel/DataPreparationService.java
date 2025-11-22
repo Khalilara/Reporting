@@ -27,18 +27,17 @@ public class DataPreparationService {
 
     @Transactional
     public void prepareData() {
-        preparedDataRepository.deleteAll(); // Reset des données existantes
+        preparedDataRepository.deleteAll();
 
         List<SalesData> salesDataList = salesDataRepository.findAll();
         List<PreparedData> preparedDataList = new ArrayList<>();
 
-        // SOLUTION 1: Gérer les doublons en gardant la première occurrence
         Map<String, ResellerCateg> resellerMap = resellerCategRepository.findAll()
                 .stream()
                 .collect(Collectors.toMap(
                         ResellerCateg::getResellerName,
                         Function.identity(),
-                        (existing, replacement) -> existing // Garde la première occurrence
+                        (existing, replacement) -> existing
                 ));
 
         Map<String, CustumerCateg> customerMap = customerCategRepository.findAll()
@@ -46,7 +45,7 @@ public class DataPreparationService {
                 .collect(Collectors.toMap(
                         CustumerCateg::getName,
                         Function.identity(),
-                        (existing, replacement) -> existing // Garde la première occurrence
+                        (existing, replacement) -> existing
                 ));
 
         Map<String, ProductCateg> productMap = productCategRepository.findAll()
@@ -54,7 +53,7 @@ public class DataPreparationService {
                 .collect(Collectors.toMap(
                         ProductCateg::getProductSubSub,
                         Function.identity(),
-                        (existing, replacement) -> existing // Garde la première occurrence
+                        (existing, replacement) -> existing
                 ));
 
         for (SalesData sales : salesDataList) {
@@ -78,9 +77,21 @@ public class DataPreparationService {
             prepared.setDiscountRate(sales.getDiscountRate());
             prepared.setBeforeDiscount(sales.getBeforeDiscount());
 
-            // Jointure avec ResellerCateg
-            if (sales.getSecondReseller() != null) {
+            // ✅ LOGIQUE CORRIGÉE pour Reseller
+            // CAS 1: Si secondReseller existe et n'est pas empty
+            if (sales.getSecondReseller() != null && 
+                !sales.getSecondReseller().isEmpty() &&
+                !sales.getSecondReseller().equalsIgnoreCase("(empty)")) {
+                
                 ResellerCateg reseller = resellerMap.get(sales.getSecondReseller());
+                if (reseller != null) {
+                    prepared.setResellerTypeName(reseller.getResellerTypeName());
+                    prepared.setChannel(reseller.getChannel());
+                }
+            } 
+            // CAS 2: Si secondReseller est empty, chercher avec reseller
+            else if (sales.getReseller() != null) {
+                ResellerCateg reseller = resellerMap.get(sales.getReseller());
                 if (reseller != null) {
                     prepared.setResellerTypeName(reseller.getResellerTypeName());
                     prepared.setChannel(reseller.getChannel());
@@ -112,11 +123,16 @@ public class DataPreparationService {
     public List<String> getSecondResellersWithMissingInfo() {
         return preparedDataRepository.findDistinctSecondResellersWithMissingInfo();
     }
-     public List<String> getEverythingMissing(){
+    
+    // ✅ AJOUTER CETTE MÉTHODE
+    public List<String> getEverythingMissing() {
         return preparedDataRepository.findDealEverythingMissing();
     }
-     @Transactional
-    public int updateResellerData(String reseller, String secondReseller, String resellerTypeName) {
-        return preparedDataRepository.updateResellerFields(reseller, secondReseller, resellerTypeName);
+    
+    @Transactional
+    public int updateResellerData(String reseller, String secondReseller, 
+                                  String resellerTypeName) {
+        return preparedDataRepository.updateResellerFields(
+            reseller, secondReseller, resellerTypeName);
     }
 }
