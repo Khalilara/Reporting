@@ -26,6 +26,9 @@ public class DataManagementService{
     @Autowired
     private ProductCategRepository productCategRepository;
     
+    @Autowired
+    private ResellerWithOut2ndResellerRepository resellerWithOut2ndResellerRepository;
+    
     @Transactional
     public Map<String, Long> clearAllData() {
         Map<String, Long> deletedCounts = new HashMap<>();
@@ -45,6 +48,9 @@ public class DataManagementService{
         
         deletedCounts.put("ProductCateg", productCategRepository.count());
         topResellerRepository.deleteAll();
+        
+        deletedCounts.put("ResellerWithOut2ndReseller", resellerWithOut2ndResellerRepository.count());
+        resellerWithOut2ndResellerRepository.deleteAll();
         
         return deletedCounts;
     }

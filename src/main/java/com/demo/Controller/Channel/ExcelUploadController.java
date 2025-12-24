@@ -2,6 +2,11 @@ package com.demo.Controller.Channel;
 
 import com.demo.Model.Channel.*;
 import com.demo.Repository.Channel.PreparedDataRepository;
+import com.demo.Repository.Channel.SalesDataRepository;
+import com.demo.Repository.Channel.ResellerCategRepository;
+import com.demo.Repository.Channel.CustomerCategRepository;
+import com.demo.Repository.Channel.ProductCategRepository;
+import com.demo.Repository.Channel.ResellerWithOut2ndResellerRepository;
 import com.demo.service.Channel.SalesDataService;
 import com.demo.service.Channel.DataPreparationService;
 import com.demo.service.Channel.ExcelServiceReader;
@@ -21,8 +26,25 @@ public class ExcelUploadController {
 
     @Autowired
     private ExcelServiceReader excelReader;
+    
     @Autowired
     private PreparedDataRepository preparedDataRepository;
+    
+    @Autowired
+    private SalesDataRepository salesDataRepository;
+    
+    @Autowired
+    private ResellerCategRepository resellerCategRepository;
+    
+    @Autowired
+    private CustomerCategRepository customerCategRepository;
+    
+    @Autowired
+    private ProductCategRepository productCategRepository;
+    
+    @Autowired
+    private ResellerWithOut2ndResellerRepository resellerWithOut2ndResellerRepository;
+    
     @Autowired
     private DataPreparationService dataserviceprepared;
 
@@ -31,11 +53,45 @@ public class ExcelUploadController {
         return ResponseEntity.ok("Hello depuis le contrôleur !");
     }
 
-    @GetMapping("/perpared-data")
-    public ResponseEntity<List<PreparedData>> getPreparedData(){
+    // ========== ENDPOINTS DE TÉLÉCHARGEMENT (GET) ==========
+    
+    @GetMapping("/sales-data")
+    public ResponseEntity<List<SalesData>> getSalesData() {
+        List<SalesData> data = salesDataRepository.findAll();
+        return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/prepared-data")
+    public ResponseEntity<List<PreparedData>> getPreparedData() {
         List<PreparedData> data = preparedDataRepository.findAll();
         return ResponseEntity.ok(data);
     }
+    
+    @GetMapping("/customer-categories")
+    public ResponseEntity<List<CustumerCateg>> getCustomerCategories() {
+        List<CustumerCateg> data = customerCategRepository.findAll();
+        return ResponseEntity.ok(data);
+    }
+    
+    @GetMapping("/reseller-categories")
+    public ResponseEntity<List<ResellerCateg>> getResellerCategories() {
+        List<ResellerCateg> data = resellerCategRepository.findAll();
+        return ResponseEntity.ok(data);
+    }
+    
+    @GetMapping("/product-categories")
+    public ResponseEntity<List<ProductCateg>> getProductCategories() {
+        List<ProductCateg> data = productCategRepository.findAll();
+        return ResponseEntity.ok(data);
+    }
+    
+    @GetMapping("/reseller-without-2nd-reseller")
+    public ResponseEntity<List<ResellerWithOut2ndReseller>> getResellerWithOut2ndReseller() {
+        List<ResellerWithOut2ndReseller> data = resellerWithOut2ndResellerRepository.findAll();
+        return ResponseEntity.ok(data);
+    }
+
+    // ========== ENDPOINTS D'UPLOAD (POST) ==========
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadExcel(@RequestParam("file") MultipartFile file) {
@@ -47,6 +103,7 @@ public class ExcelUploadController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
         }
     }
+    
     @PostMapping("/upload/customer")
     public ResponseEntity<String> uploadExcel2(@RequestParam("file") MultipartFile file) {
         try {
@@ -58,6 +115,7 @@ public class ExcelUploadController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
         }
     }
+    
     @PostMapping("/upload/reseller")
     public ResponseEntity<String> uploadExcelReseller(@RequestParam("file") MultipartFile file) {
         try {
@@ -69,6 +127,7 @@ public class ExcelUploadController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
         }
     }
+    
     @PostMapping("/upload/product")
     public ResponseEntity<String> uploadExcelProduct(@RequestParam("file") MultipartFile file) {
         try {
@@ -79,5 +138,4 @@ public class ExcelUploadController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
         }
     }
-
 }

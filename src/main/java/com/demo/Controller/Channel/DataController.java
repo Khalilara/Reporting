@@ -5,6 +5,7 @@ import com.demo.Model.Channel.CustumerCateg;
 import com.demo.Model.Channel.PreparedData;
 import com.demo.Model.Channel.ProductCateg;
 import com.demo.Model.Channel.ResellerCateg;
+import com.demo.Model.Channel.ResellerWithOut2ndReseller;
 import com.demo.Repository.Channel.CustomerCategRepository;
 import com.demo.Repository.Channel.PreparedDataRepository;
 import com.demo.Repository.Channel.ProductCategRepository;
@@ -12,6 +13,7 @@ import com.demo.Repository.Channel.ResellerCategRepository;
 import com.demo.service.Channel.DashboardService;
 import com.demo.service.Channel.DataPreparationService;
 import com.demo.service.Channel.ExcelServiceReader;
+import com.demo.service.Channel.ResellerWithOut2ndResellerService;
 import com.demo.service.Channel.SalesDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -41,6 +43,8 @@ public class DataController {
     private DataPreparationService dataPreparationService;
     @Autowired
     private DashboardService dashboardService;
+    @Autowired
+    private ResellerWithOut2ndResellerService resellerWithOut2ndResellerService;
 
 
     @GetMapping("/perpared-data")
@@ -190,17 +194,28 @@ public ResponseEntity<String> updateResellerData(@RequestBody Map<String, String
         if (reseller == null || reseller.isEmpty()) {
             return ResponseEntity.badRequest().body("Le nom du reseller est obligatoire");
         }
-
-        // ✅ 4 paramètres maintenant
-        int updated = dataPreparationService.updateResellerData(
-            reseller, secondReseller, resellerTypeName);
-
-        if (updated > 0) {
-            return ResponseEntity.ok(updated + " enregistrement(s) mis à jour !");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Aucun enregistrement trouvé pour ce reseller.");
+        if (secondReseller == null || secondReseller.isEmpty()) {
+            return ResponseEntity.badRequest().body("Le secondReseller est obligatoire");
         }
+        if (resellerTypeName == null || resellerTypeName.isEmpty()) {
+            return ResponseEntity.badRequest().body("Le resellerTypeName est obligatoire");
+        }
+
+        // ✅ 1. Sauvegarder dans ResellerWithOut2ndReseller (persistance)
+        resellerWithOut2ndResellerService.saveOrUpdate(
+            reseller, secondReseller, resellerTypeName, secondReseller);
+
+        // ✅ 2. Mettre à jour immédiatement PreparedData pour ce reseller
+        int updatedCount = dataPreparationService.updatePreparedDataForReseller(
+            reseller, secondReseller, resellerTypeName, secondReseller);
+
+        String message = "Reseller \"" + reseller + "\" mappé avec succès au secondReseller \"" + 
+                         secondReseller + "\" !";
+        if (updatedCount > 0) {
+            message += " (" + updatedCount + " enregistrement(s) PreparedData mis à jour immédiatement)";
+        }
+
+        return ResponseEntity.ok(message);
 
     } catch (Exception e) {
         e.printStackTrace();

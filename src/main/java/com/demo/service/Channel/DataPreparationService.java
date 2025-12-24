@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -24,6 +25,8 @@ public class DataPreparationService {
     private ProductCategRepository productCategRepository;
     @Autowired
     private PreparedDataRepository preparedDataRepository;
+    @Autowired
+    private ResellerWithOut2ndResellerRepository resellerWithOut2ndResellerRepository;
 
     @Transactional
     public void prepareData() {
@@ -89,12 +92,24 @@ public class DataPreparationService {
                     prepared.setChannel(reseller.getChannel());
                 }
             } 
-            // CAS 2: Si secondReseller est empty, chercher avec reseller
+            // CAS 2: Si secondReseller est empty, chercher dans la lookup table
             else if (sales.getReseller() != null) {
-                ResellerCateg reseller = resellerMap.get(sales.getReseller());
-                if (reseller != null) {
-                    prepared.setResellerTypeName(reseller.getResellerTypeName());
-                    prepared.setChannel(reseller.getChannel());
+                // ✅ Chercher d'abord dans ResellerWithOut2ndReseller
+                Optional<ResellerWithOut2ndReseller> mapping = 
+                    resellerWithOut2ndResellerRepository.findByReseller(sales.getReseller());
+                
+                if (mapping.isPresent()) {
+                    // Utiliser le mapping de la lookup table
+                    prepared.setSecondReseller(mapping.get().getSecondReseller());
+                    prepared.setResellerTypeName(mapping.get().getResellerTypeName());
+                    prepared.setChannel(mapping.get().getChannel());
+                } else {
+                    // Fallback: chercher avec reseller dans ResellerCateg
+                    ResellerCateg reseller = resellerMap.get(sales.getReseller());
+                    if (reseller != null) {
+                        prepared.setResellerTypeName(reseller.getResellerTypeName());
+                        prepared.setChannel(reseller.getChannel());
+                    }
                 }
             }
 
@@ -122,6 +137,35 @@ public class DataPreparationService {
 
     public List<String> getSecondResellersWithMissingInfo() {
         return preparedDataRepository.findDistinctSecondResellersWithMissingInfo();
+    }
+    
+    /**
+     * Met à jour instantanément les données PreparedData pour un reseller spécifique
+     * Appelée après la création d'un mapping dans ResellerWithOut2ndReseller
+     */
+    @Transactional
+    public int updatePreparedDataForReseller(String reseller, String secondReseller, 
+                                             String resellerTypeName, String channel) {
+        // Récupérer tous les PreparedData pour ce reseller avec secondReseller vide
+        List<PreparedData> preparedDataList = preparedDataRepository.findAll().stream()
+            .filter(p -> p.getReseller() != null && p.getReseller().equals(reseller))
+            .filter(p -> p.getSecondReseller() == null || p.getSecondReseller().isEmpty() 
+                      || p.getSecondReseller().equalsIgnoreCase("(empty)"))
+            .toList();
+        
+        // Mettre à jour chaque enregistrement
+        for (PreparedData prepared : preparedDataList) {
+            prepared.setSecondReseller(secondReseller);
+            prepared.setResellerTypeName(resellerTypeName);
+            prepared.setChannel(channel);
+        }
+        
+        // Sauvegarder les modifications
+        if (!preparedDataList.isEmpty()) {
+            preparedDataRepository.saveAll(preparedDataList);
+        }
+        
+        return preparedDataList.size();
     }
     
     // ✅ AJOUTER CETTE MÉTHODE
