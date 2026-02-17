@@ -8,6 +8,7 @@ import com.demo.service.Channel.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -15,7 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
+@CrossOrigin(
+    origins = "http://106.102.1.60",
+    allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api/dashboard")
 public class DasboardController {

@@ -1,5 +1,6 @@
 package com.demo.Controller.Channel;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import com.demo.Model.Channel.CustumerCateg;
 import com.demo.Model.Channel.PreparedData;
@@ -23,7 +24,10 @@ import java.util.Map;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
+@CrossOrigin(
+    origins = "http://106.102.1.60",
+    allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api")
 public class DataController {

@@ -4,13 +4,16 @@ import com.demo.service.Channel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.HashMap;
 import java.util.Map;
-
+@CrossOrigin(
+    origins = "http://106.102.1.60",
+    allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api/data-management")
-@CrossOrigin(origins = "*")
 public class DatamanagementController {
 
     @Autowired

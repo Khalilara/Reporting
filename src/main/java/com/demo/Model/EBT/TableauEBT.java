@@ -43,6 +43,9 @@ public class TableauEBT {
     @Column
     private String quarter;
 
+    @Column
+    private Double targetQuarter;
+
     // Constructeurs
     public TableauEBT() {}
 
@@ -143,6 +146,14 @@ public class TableauEBT {
         this.quarter = quarter;
     }
 
+    public Double getTargetQuarter() {
+        return targetQuarter;
+    }
+
+    public void setTargetQuarter(Double targetQuarter) {
+        this.targetQuarter = targetQuarter;
+    }
+
     @Override
     public String toString() {
         return "TableauEBT{" +
@@ -150,6 +161,7 @@ public class TableauEBT {
                 ", type='" + type + '\'' +
                 ", probabilite='" + probabilite + '\'' +
                 ", client='" + client + '\'' +
+                ", targetQuarter=" + targetQuarter +
                 ", solution='" + solution + '\'' +
                 ", quantite=" + quantite +
                 ", prix=" + prix +
