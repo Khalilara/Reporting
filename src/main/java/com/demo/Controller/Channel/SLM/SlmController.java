@@ -1,4 +1,4 @@
-package com.demo.Controller;
+package com.demo.Controller.Channel.SLM;
 
 import com.demo.Model.Channel.SLM.SLM;
 import com.demo.Model.Channel.SLM.EndCustomer;
@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import com.demo.dto.RevenueInsight;
 import com.demo.service.Channel.SLM.RevenueService;
-@CrossOrigin(origins = "http://106.102.1.60", allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/slm")
 public class SlmController {

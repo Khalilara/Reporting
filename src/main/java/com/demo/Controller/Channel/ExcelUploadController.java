@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 @CrossOrigin(
-    origins = "http://106.102.1.60",
+    origins = "http://localhost",
     allowCredentials = "true"
 )
 @RestController
