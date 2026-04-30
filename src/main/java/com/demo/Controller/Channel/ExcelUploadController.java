@@ -8,6 +8,8 @@ import com.demo.Repository.Channel.CustomerCategRepository;
 import com.demo.Repository.Channel.ProductCategRepository;
 import com.demo.Repository.Channel.ResellerWithOut2ndResellerRepository;
 import com.demo.service.Channel.SalesDataService;
+import com.demo.service.Channel.SalesDataImportService;
+import com.demo.service.Channel.ArchiveDataService;
 import com.demo.service.Channel.DataPreparationService;
 import com.demo.service.Channel.ExcelServiceReader;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
+import java.util.Map;
 @CrossOrigin(
-    origins = "http://localhost",
+    origins = "http://106.102.1.60",
     allowCredentials = "true"
 )
 @RestController
@@ -27,6 +30,12 @@ import java.util.List;
 public class ExcelUploadController {
     @Autowired
     private SalesDataService service;
+    
+    @Autowired
+    private SalesDataImportService importService;
+    
+    @Autowired
+    private ArchiveDataService archiveService;
 
     @Autowired
     private ExcelServiceReader excelReader;
@@ -140,6 +149,38 @@ public class ExcelUploadController {
             return ResponseEntity.ok("Fichier importé avec succès !");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+        }
+    }
+    
+    // ========== ARCHIVE ENDPOINT: Manual archiving AFTER data cleaning ==========
+    
+    /**
+     * Manual archive endpoint - archives cleaned PreparedData to archive table
+     * Called AFTER user has cleaned the data in Data Table
+     */
+    @PostMapping("/archive-prepared-data")
+    public ResponseEntity<Map<String, Object>> archivePreparedData(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week,
+            @RequestParam(required = false) String weekDate) {
+        
+        try {
+            ArchiveDataService.ArchiveResult result = archiveService.archiveCurrentPreparedData(
+                year, quarter, week, weekDate
+            );
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", result.message,
+                "batchId", result.batchId,
+                "archivedRows", result.archivedCount,
+                "isOverwrite", result.isOverwrite
+            ));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "Archive failed: " + e.getMessage()));
         }
     }
 }

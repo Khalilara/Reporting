@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(
-    origins = "http://localhost",
+    origins = "http://106.102.1.60",
     allowCredentials = "true"
 )
 @RestController

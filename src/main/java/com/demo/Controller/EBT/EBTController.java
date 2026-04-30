@@ -7,10 +7,12 @@ import com.demo.Model.EBT.EvolutionEBT;
 import com.demo.Repository.EBT.EvolutionEBTRepository;
 import com.demo.Repository.EBT.TableauEbtRepository;
 import com.demo.service.EBT.EBTService;
+import com.demo.service.EBT.EBTExcelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ import java.util.Map;
 public class EBTController {
     @Autowired
     private EBTService ebtService;
+    @Autowired
+    private EBTExcelService ebtExcelService;
     @Autowired
     private TableauEbtRepository tableauEbtRepository;
     @Autowired
@@ -314,5 +318,67 @@ public class EBTController {
         }
     }
 
+    // ========== UPLOAD EXCEL ENDPOINTS ==========
+    @PostMapping("/upload/tableau")
+    public ResponseEntity<?> uploadTableauEBTExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            // Vérifier que le fichier n'est pas vide
+            if (file.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Le fichier est vide");
+            }
+
+            // Lire les données du fichier Excel
+            List<TableauEBT> dataFromExcel = ebtExcelService.readTableauEBTFromExcel(file.getInputStream());
+
+            if (dataFromExcel.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Aucune donnée valide trouvée dans le fichier");
+            }
+
+            // Supprimer toutes les données existantes
+            tableauEbtRepository.deleteAll();
+
+            // Insérer les nouvelles données
+            List<TableauEBT> savedData = tableauEbtRepository.saveAll(dataFromExcel);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Fichier importé avec succès. " + savedData.size() + " enregistrements chargés.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de l'upload: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/upload/evolution")
+    public ResponseEntity<?> uploadEvolutionEBTExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            // Vérifier que le fichier n'est pas vide
+            if (file.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Le fichier est vide");
+            }
+
+            // Lire les données du fichier Excel
+            List<EvolutionEBT> dataFromExcel = ebtExcelService.readEvolutionEBTFromExcel(file.getInputStream());
+
+            if (dataFromExcel.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Aucune donnée valide trouvée dans le fichier");
+            }
+
+            // Supprimer toutes les données existantes
+            evolutionEBTRepository.deleteAll();
+
+            // Insérer les nouvelles données
+            List<EvolutionEBT> savedData = evolutionEBTRepository.saveAll(dataFromExcel);
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Fichier importé avec succès. " + savedData.size() + " enregistrements chargés.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur lors de l'upload: " + e.getMessage());
+        }
+    }
 
 }

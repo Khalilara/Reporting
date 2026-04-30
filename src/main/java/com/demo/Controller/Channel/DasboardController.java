@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 @CrossOrigin(
-    origins = "http://localhost",
+    origins = "http://106.102.1.60",
     allowCredentials = "true"
 )
 @RestController
@@ -33,10 +33,28 @@ public ResponseEntity<List<Map<String, Object>>> channel() {
     return ResponseEntity.ok(data);
 }
 
+ @GetMapping("/channel/archive")
+public ResponseEntity<List<Map<String, Object>>> channelArchive(
+        @RequestParam Integer year,
+        @RequestParam String quarter,
+        @RequestParam Integer week) {
+    List<Map<String, Object>> data = dashboardService.getRevenueWithTargetsDetailedArchive(year, quarter, week);
+    return ResponseEntity.ok(data);
+}
+
 
     @GetMapping("/smb-distribution")
     public ResponseEntity<Map<String, Map<String, Object>>> getSmbDistribution() {
         Map<String, Map<String, Object>> distribution = dashboardService.getSmbDistributionByResellerTypName();
+        return ResponseEntity.ok(distribution);
+    }
+
+    @GetMapping("/smb-distribution/archive")
+    public ResponseEntity<Map<String, Map<String, Object>>> getSmbDistributionArchive(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week) {
+        Map<String, Map<String, Object>> distribution = dashboardService.getSmbDistributionByResellerTypNameArchive(year, quarter, week);
         return ResponseEntity.ok(distribution);
     }
 
@@ -45,18 +63,51 @@ public ResponseEntity<List<Map<String, Object>>> channel() {
         return ResponseEntity.ok(dashboardService.getCaEbt());
     }
 
+    @GetMapping("/ebt/archive")
+    public ResponseEntity<Map<String, BigDecimal>> getEbtArchive(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week) {
+        return ResponseEntity.ok(dashboardService.getCaEbtArchive(year, quarter, week));
+    }
+
     @GetMapping("/smb")
     public ResponseEntity<Map<String, BigDecimal>> getSmb() {
         return ResponseEntity.ok(dashboardService.getCaSmb());
     }
 
-    @GetMapping("/top-deals")
-    public ResponseEntity<List<PreparedData>> getTopDeals() {
-        return ResponseEntity.ok(dashboardService.getTopDeals());
+    @GetMapping("/smb/archive")
+    public ResponseEntity<Map<String, BigDecimal>> getSmbArchive(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week) {
+        return ResponseEntity.ok(dashboardService.getCaSmbArchive(year, quarter, week));
     }
+
+    @GetMapping("/top-deals")
+    public ResponseEntity<Map<String, List<PreparedData>>> getTopDeals() {
+        return ResponseEntity.ok(dashboardService.getTopDealsByCustomerType());
+    }
+
+    @GetMapping("/top-deals/archive")
+    public ResponseEntity<Map<String, List<PreparedData>>> getTopDealsArchive(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week) {
+        return ResponseEntity.ok(dashboardService.getTopDealsByCustomerTypeArchive(year, quarter, week));
+    }
+
     @GetMapping("/global")
     public ResponseEntity<Map<Integer, Map<String, Map<String, BigDecimal>>>> getGlobalRevenue() {
         return ResponseEntity.ok(dashboardService.getGlobalRevenueByYear());
+    }
+
+    @GetMapping("/global/archive")
+    public ResponseEntity<Map<Integer, Map<String, Map<String, BigDecimal>>>> getGlobalRevenueArchive(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week) {
+        return ResponseEntity.ok(dashboardService.getGlobalRevenueByYearArchive(year, quarter, week));
     }
 
     @PostMapping("/create-reseller")
@@ -102,6 +153,18 @@ public ResponseEntity<List<Map<String, Object>>> channel() {
                     .badRequest()
                     .body("Erreur lors de la mise à jour : " + e.getMessage());
         }
+    }
+    @GetMapping("/revenue-by-product-subsub")
+    public ResponseEntity<Map<String, Map<String, BigDecimal>>> getRevenueByProductSubSub() {
+        return ResponseEntity.ok(dashboardService.getRevenueByProductSubSub());
+    }
+
+    @GetMapping("/revenue-by-product-subsub/archive")
+    public ResponseEntity<Map<String, Map<String, BigDecimal>>> getRevenueByProductSubSubArchive(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week) {
+        return ResponseEntity.ok(dashboardService.getRevenueByProductSubSubArchive(year, quarter, week));
     }
 
 }

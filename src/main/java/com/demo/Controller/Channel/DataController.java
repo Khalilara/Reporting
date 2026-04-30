@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 @CrossOrigin(
-    origins = "http://localhost",
+    origins = "http://106.102.1.60",
     allowCredentials = "true"
 )
 @RestController
@@ -143,6 +143,15 @@ public class DataController {
         return ResponseEntity.ok(data);
     }
 
+    @GetMapping("/revenue-by-customer/archive")
+    public ResponseEntity<Map<String, Object>> getRevenueByCustomerTypeAndResellerWithNamesArchive(
+            @RequestParam Integer year,
+            @RequestParam String quarter,
+            @RequestParam Integer week) {
+        Map<String, Object> data = dashboardService.getRevenueByCustomerTypeAndResellerWithNamesArchive(year, quarter, week);
+        return ResponseEntity.ok(data);
+    }
+
 
 
     @PostMapping("/post/reseller")
@@ -184,6 +193,68 @@ public ResponseEntity<?> createReseller(@RequestBody ResellerCateg resellerCateg
         e.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body("Erreur : " + e.getMessage());
+    }
+}
+
+/**
+ * Create multiple resellers as "unmanaged" type
+ * Sets channel = reseller name, type = "unmanaged"
+ */
+@PostMapping("/resellers/create-unmanaged")
+public ResponseEntity<?> createUnmanagedResellers(@RequestBody List<String> resellerNames) {
+    try {
+        if (resellerNames == null || resellerNames.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "La liste des resellers est vide"
+            ));
+        }
+
+        int created = 0;
+        int updated = 0;
+
+        for (String resellerName : resellerNames) {
+            if (resellerName == null || resellerName.trim().isEmpty()) {
+                continue;
+            }
+
+            Optional<ResellerCateg> existingOpt = resellerCategRepository.findByResellerName(resellerName);
+            
+            if (existingOpt.isPresent()) {
+                // Update existing
+                ResellerCateg existing = existingOpt.get();
+                existing.setChannel(resellerName);
+                existing.setResellerTypeName("unmanaged");
+                resellerCategRepository.save(existing);
+                updated++;
+            } else {
+                // Create new
+                ResellerCateg newReseller = new ResellerCateg();
+                newReseller.setResellerName(resellerName);
+                newReseller.setChannel(resellerName);
+                newReseller.setResellerTypeName("unmanaged");
+                resellerCategRepository.save(newReseller);
+                created++;
+            }
+        }
+
+        // Regenerate prepared data
+        dataPreparationService.prepareData();
+
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", String.format("✅ Créé: %d, Mis à jour: %d resellers unmanaged", created, updated),
+            "created", created,
+            "updated", updated
+        ));
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(Map.of(
+                "success", false,
+                "message", "Erreur : " + e.getMessage()
+            ));
     }
 }
 
@@ -354,6 +425,45 @@ public ResponseEntity<?> updatePreparedData(@PathVariable Long id, @RequestBody 
     }
 }
 
+/**
+ * Batch update: Set all empty/null/N/A resellerType to "unmanaged"
+ */
+@PutMapping("/perpared-data/batch/set-unmanaged")
+public ResponseEntity<?> setEmptyResellerTypeToUnmanaged() {
+    try {
+        // Get all prepared data
+        List<PreparedData> allData = preparedDataRepository.findAll();
+        
+        int updated = 0;
+        
+        // Update all with empty, null, or "N/A" resellerType
+        for (PreparedData item : allData) {
+            String resellerType = item.getResellerType();
+            if (resellerType == null || 
+                resellerType.trim().isEmpty() || 
+                resellerType.trim().equalsIgnoreCase("N/A") ||
+                resellerType.trim().equalsIgnoreCase("na")) {
+                item.setResellerType("unmanaged");
+                preparedDataRepository.save(item);
+                updated++;
+            }
+        }
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", String.format("✅ %d resellers set to unmanaged", updated),
+            "updated", updated
+        ));
+        
+    } catch (Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(Map.of(
+                "success", false,
+                "message", "Erreur : " + e.getMessage()
+            ));
+    }
+}
 
 }
 
