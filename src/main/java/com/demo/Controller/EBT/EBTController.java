@@ -320,7 +320,10 @@ public class EBTController {
 
     // ========== UPLOAD EXCEL ENDPOINTS ==========
     @PostMapping("/upload/tableau")
-    public ResponseEntity<?> uploadTableauEBTExcel(@RequestParam("file") MultipartFile file) {
+        public ResponseEntity<?> uploadTableauEBTExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "quarter", required = false) String quarter,
+            @RequestParam(value = "forceIndex", required = false, defaultValue = "false") boolean forceIndex) {
         try {
             // Vérifier que le fichier n'est pas vide
             if (file.isEmpty()) {
@@ -329,11 +332,22 @@ public class EBTController {
             }
 
             // Lire les données du fichier Excel
-            List<TableauEBT> dataFromExcel = ebtExcelService.readTableauEBTFromExcel(file.getInputStream());
+            List<TableauEBT> dataFromExcel = ebtExcelService.readTableauEBTFromExcel(file.getInputStream(), forceIndex);
 
             if (dataFromExcel.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Aucune donnée valide trouvée dans le fichier");
+            }
+
+            String normalizedQuarter = normalizeQuarter(quarter);
+            if (normalizedQuarter != null) {
+                dataFromExcel.forEach(row -> {
+                    if (row.getQuarter() == null || row.getQuarter().trim().isEmpty() || !isValidQuarter(row.getQuarter())) {
+                        row.setQuarter(normalizedQuarter);
+                    } else {
+                        row.setQuarter(row.getQuarter().trim().toUpperCase());
+                    }
+                });
             }
 
             // Supprimer toutes les données existantes
@@ -351,7 +365,10 @@ public class EBTController {
     }
 
     @PostMapping("/upload/evolution")
-    public ResponseEntity<?> uploadEvolutionEBTExcel(@RequestParam("file") MultipartFile file) {
+        public ResponseEntity<?> uploadEvolutionEBTExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "quarter", required = false) String quarter,
+            @RequestParam(value = "forceIndex", required = false, defaultValue = "false") boolean forceIndex) {
         try {
             // Vérifier que le fichier n'est pas vide
             if (file.isEmpty()) {
@@ -360,11 +377,22 @@ public class EBTController {
             }
 
             // Lire les données du fichier Excel
-            List<EvolutionEBT> dataFromExcel = ebtExcelService.readEvolutionEBTFromExcel(file.getInputStream());
+            List<EvolutionEBT> dataFromExcel = ebtExcelService.readEvolutionEBTFromExcel(file.getInputStream(), forceIndex);
 
             if (dataFromExcel.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("Aucune donnée valide trouvée dans le fichier");
+            }
+
+            String normalizedQuarter = normalizeQuarter(quarter);
+            if (normalizedQuarter != null) {
+                dataFromExcel.forEach(row -> {
+                    if (row.getQuarter() == null || row.getQuarter().trim().isEmpty() || !isValidQuarter(row.getQuarter())) {
+                        row.setQuarter(normalizedQuarter);
+                    } else {
+                        row.setQuarter(row.getQuarter().trim().toUpperCase());
+                    }
+                });
             }
 
             // Supprimer toutes les données existantes
@@ -379,6 +407,24 @@ public class EBTController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Erreur lors de l'upload: " + e.getMessage());
         }
+    }
+
+    private String normalizeQuarter(String quarter) {
+        if (quarter == null) {
+            return null;
+        }
+        String value = quarter.trim().toUpperCase();
+        return isValidQuarter(value) ? value : null;
+    }
+
+    private boolean isValidQuarter(String quarter) {
+        if (quarter == null) {
+            return false;
+        }
+        return switch (quarter.trim().toUpperCase()) {
+            case "Q1", "Q2", "Q3", "Q4" -> true;
+            default -> false;
+        };
     }
 
 }

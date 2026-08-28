@@ -1,4 +1,4 @@
--- Create archive table for PreparedData with metadata
+-- Create archive table for PreparedData with metadata (PostgreSQL compatible)
 CREATE TABLE IF NOT EXISTS sales_data_archive (
     id BIGSERIAL PRIMARY KEY,
     
@@ -20,31 +20,35 @@ CREATE TABLE IF NOT EXISTS sales_data_archive (
     discount_rate NUMERIC,
     revenue NUMERIC,
     
-    -- Joined/enriched columns from PreparedData
+    -- Joined/enriched columns
     reseller_type_name VARCHAR,
     channel VARCHAR,
     customer_type VARCHAR,
     product_type VARCHAR,
     
-    -- Archive metadata (3 new columns as confirmed)
-    archive_year INT NOT NULL COMMENT 'The year of the import (2025, 2026, etc)',
-    archive_quarter VARCHAR(2) NOT NULL COMMENT 'The quarter (Q1, Q2, Q3, Q4)',
-    archive_week INT NOT NULL COMMENT 'The week number (1, 2, 3, 4)',
+    -- Archive metadata
+    archive_year INT NOT NULL,
+    archive_quarter VARCHAR(2) NOT NULL,
+    archive_week INT NOT NULL,
+    week_date DATE,
     
     -- Audit columns
-    batch_id UUID NOT NULL COMMENT 'Unique identifier for this import batch',
-    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'When this version was archived',
-    
-    -- Indexes for fast queries
-    INDEX idx_archive_period (archive_year, archive_quarter, archive_week),
-    INDEX idx_archive_batch (batch_id),
-    UNIQUE INDEX uk_archive_batch (batch_id, id)
+    batch_id UUID NOT NULL,
+    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create index for querying by period
-CREATE INDEX IF NOT EXISTS idx_archive_quarterly 
-ON sales_data_archive(archive_year, archive_quarter);
+-- Indexes for fast queries
+CREATE INDEX IF NOT EXISTS idx_archive_period ON sales_data_archive(archive_year, archive_quarter, archive_week);
+CREATE INDEX IF NOT EXISTS idx_archive_batch ON sales_data_archive(batch_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_archive_batch ON sales_data_archive(batch_id, id);
 
--- Create index for quick lookup of archived versions
-CREATE INDEX IF NOT EXISTS idx_archive_week 
-ON sales_data_archive(archive_year, archive_quarter, archive_week);
+-- Index for querying by period
+CREATE INDEX IF NOT EXISTS idx_archive_quarterly ON sales_data_archive(archive_year, archive_quarter);
+CREATE INDEX IF NOT EXISTS idx_archive_week ON sales_data_archive(archive_year, archive_quarter, archive_week);
+
+-- (Optionnel) Ajouter des commentaires sur les colonnes
+COMMENT ON COLUMN sales_data_archive.archive_year IS 'The year of the import (2025, 2026, etc)';
+COMMENT ON COLUMN sales_data_archive.archive_quarter IS 'The quarter (Q1, Q2, Q3, Q4)';
+COMMENT ON COLUMN sales_data_archive.archive_week IS 'The week number (1, 2, 3, 4)';
+COMMENT ON COLUMN sales_data_archive.batch_id IS 'Unique identifier for this import batch';
+COMMENT ON COLUMN sales_data_archive.archived_at IS 'When this version was archived';

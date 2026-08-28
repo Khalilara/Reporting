@@ -25,7 +25,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             User user = userService.login(request);
-            String token = jwtUtils.generateToken(user.getUsername());
+            String token = jwtUtils.generateToken(user.getUsername(), user.getRole().name());
             
             LoginResponse response = new LoginResponse(
                     token,
@@ -35,7 +35,7 @@ public class AuthController {
                     user.getFirstName(),
                     user.getLastName(),
                     user.getPhoneNumber(),
-                    user.getFonction()
+                    user.getRole().name()
             );
             
             return ResponseEntity.ok(response);
@@ -48,21 +48,9 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            User user = userService.register(request);
-            String token = jwtUtils.generateToken(user.getUsername());
-            
-            LoginResponse response = new LoginResponse(
-                    token,
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getPhoneNumber(),
-                    user.getFonction()
-            );
-            
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            userService.register(request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new ErrorResponse("Your account has been created and is pending approval by an administrator."));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ErrorResponse("Registration failed: " + e.getMessage()));

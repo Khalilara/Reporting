@@ -1,63 +1,52 @@
 package com.demo.Controller.Channel;
 
 import com.demo.Model.Channel.*;
-import com.demo.Repository.Channel.PreparedDataRepository;
-import com.demo.Repository.Channel.SalesDataRepository;
-import com.demo.Repository.Channel.ResellerCategRepository;
-import com.demo.Repository.Channel.CustomerCategRepository;
-import com.demo.Repository.Channel.ProductCategRepository;
-import com.demo.Repository.Channel.ResellerWithOut2ndResellerRepository;
-import com.demo.service.Channel.SalesDataService;
-import com.demo.service.Channel.SalesDataImportService;
-import com.demo.service.Channel.ArchiveDataService;
-import com.demo.service.Channel.DataPreparationService;
-import com.demo.service.Channel.ExcelServiceReader;
+import com.demo.Repository.Channel.*;
+import com.demo.service.Channel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.util.List;
 import java.util.Map;
+
 @CrossOrigin(
-    origins = "http://106.102.1.60",
-    allowCredentials = "true"
+        origins = "http://106.102.1.60",
+        allowCredentials = "true"
 )
 @RestController
 @RequestMapping("/api/excel")
 public class ExcelUploadController {
+
     @Autowired
     private SalesDataService service;
-    
-    @Autowired
-    private SalesDataImportService importService;
-    
+
     @Autowired
     private ArchiveDataService archiveService;
 
     @Autowired
     private ExcelServiceReader excelReader;
-    
+
     @Autowired
     private PreparedDataRepository preparedDataRepository;
-    
+
     @Autowired
     private SalesDataRepository salesDataRepository;
-    
+
     @Autowired
     private ResellerCategRepository resellerCategRepository;
-    
+
     @Autowired
     private CustomerCategRepository customerCategRepository;
-    
+
     @Autowired
     private ProductCategRepository productCategRepository;
-    
+
     @Autowired
     private ResellerWithOut2ndResellerRepository resellerWithOut2ndResellerRepository;
-    
+
     @Autowired
     private DataPreparationService dataserviceprepared;
 
@@ -66,121 +55,161 @@ public class ExcelUploadController {
         return ResponseEntity.ok("Hello depuis le contrôleur !");
     }
 
-    // ========== ENDPOINTS DE TÉLÉCHARGEMENT (GET) ==========
-    
     @GetMapping("/sales-data")
     public ResponseEntity<List<SalesData>> getSalesData() {
-        List<SalesData> data = salesDataRepository.findAll();
-        return ResponseEntity.ok(data);
+        return ResponseEntity.ok(salesDataRepository.findAll());
     }
 
     @GetMapping("/prepared-data")
     public ResponseEntity<List<PreparedData>> getPreparedData() {
-        List<PreparedData> data = preparedDataRepository.findAll();
-        return ResponseEntity.ok(data);
-    }
-    
-    @GetMapping("/customer-categories")
-    public ResponseEntity<List<CustumerCateg>> getCustomerCategories() {
-        List<CustumerCateg> data = customerCategRepository.findAll();
-        return ResponseEntity.ok(data);
-    }
-    
-    @GetMapping("/reseller-categories")
-    public ResponseEntity<List<ResellerCateg>> getResellerCategories() {
-        List<ResellerCateg> data = resellerCategRepository.findAll();
-        return ResponseEntity.ok(data);
-    }
-    
-    @GetMapping("/product-categories")
-    public ResponseEntity<List<ProductCateg>> getProductCategories() {
-        List<ProductCateg> data = productCategRepository.findAll();
-        return ResponseEntity.ok(data);
-    }
-    
-    @GetMapping("/reseller-without-2nd-reseller")
-    public ResponseEntity<List<ResellerWithOut2ndReseller>> getResellerWithOut2ndReseller() {
-        List<ResellerWithOut2ndReseller> data = resellerWithOut2ndResellerRepository.findAll();
-        return ResponseEntity.ok(data);
+        return ResponseEntity.ok(preparedDataRepository.findAll());
     }
 
-    // ========== ENDPOINTS D'UPLOAD (POST) ==========
+    @GetMapping("/customer-categories")
+    public ResponseEntity<List<CustumerCateg>> getCustomerCategories() {
+        return ResponseEntity.ok(customerCategRepository.findAll());
+    }
+
+    @GetMapping("/reseller-categories")
+    public ResponseEntity<List<ResellerCateg>> getResellerCategories() {
+        return ResponseEntity.ok(resellerCategRepository.findAll());
+    }
+
+    @GetMapping("/product-categories")
+    public ResponseEntity<List<ProductCateg>> getProductCategories() {
+        return ResponseEntity.ok(productCategRepository.findAll());
+    }
+
+    @GetMapping("/reseller-without-2nd-reseller")
+    public ResponseEntity<List<ResellerWithOut2ndReseller>> getResellerWithOut2ndReseller() {
+        return ResponseEntity.ok(resellerWithOut2ndResellerRepository.findAll());
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadExcel(@RequestParam("file") MultipartFile file) {
         try {
             List<SalesData> dataList = excelReader.readExcelFile(file.getInputStream());
-            service.saveAll(dataList);
-            return ResponseEntity.ok("Fichier importé avec succès !");
+
+            new Thread(() -> {
+                try {
+                    System.out.println("Début import sales_data en arrière-plan...");
+                    service.saveAll(dataList);
+                    System.out.println("Import sales_data terminé.");
+                } catch (Exception e) {
+                    System.out.println("Erreur import sales_data async : " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }).start();
+
+            return ResponseEntity.ok("Fichier reçu. Import lancé en arrière-plan.");
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur : " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/upload/customer")
     public ResponseEntity<String> uploadExcel2(@RequestParam("file") MultipartFile file) {
         try {
-            List<CustumerCateg> dataList2 = excelReader.readExcelFile2(file.getInputStream());
-            service.saveAll2(dataList2);
-            dataserviceprepared.prepareData();
-            return ResponseEntity.ok("Fichier importé avec succès !");
+            List<CustumerCateg> dataList = excelReader.readExcelFile2(file.getInputStream());
+
+            new Thread(() -> {
+                try {
+                    System.out.println("Début import customer en arrière-plan...");
+                    service.saveAll2(dataList);
+                    dataserviceprepared.prepareData();
+                    System.out.println("Import customer terminé.");
+                } catch (Exception e) {
+                    System.out.println("Erreur import customer async : " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }).start();
+
+            return ResponseEntity.ok("Fichier reçu. Import lancé en arrière-plan.");
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur : " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/upload/reseller")
     public ResponseEntity<String> uploadExcelReseller(@RequestParam("file") MultipartFile file) {
         try {
-            List<ResellerCateg> dataList3 = excelReader.readExcelFileReseller(file.getInputStream());
-            service.saveAllReseller(dataList3);
-            dataserviceprepared.prepareData();
-            return ResponseEntity.ok("Fichier importé avec succès !");
+            List<ResellerCateg> dataList = excelReader.readExcelFileReseller(file.getInputStream());
+
+            new Thread(() -> {
+                try {
+                    System.out.println("Début import reseller en arrière-plan...");
+                    service.saveAllReseller(dataList);
+                    dataserviceprepared.prepareData();
+                    System.out.println("Import reseller terminé.");
+                } catch (Exception e) {
+                    System.out.println("Erreur import reseller async : " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }).start();
+
+            return ResponseEntity.ok("Fichier reçu. Import lancé en arrière-plan.");
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur : " + e.getMessage());
         }
     }
-    
+
     @PostMapping("/upload/product")
     public ResponseEntity<String> uploadExcelProduct(@RequestParam("file") MultipartFile file) {
         try {
-            List<ProductCateg> dataList3 = excelReader.readExcelFileProduct(file.getInputStream());
-            service.saveAllProduct(dataList3);
-            return ResponseEntity.ok("Fichier importé avec succès !");
+            List<ProductCateg> dataList = excelReader.readExcelFileProduct(file.getInputStream());
+
+            new Thread(() -> {
+                try {
+                    System.out.println("Début import product en arrière-plan...");
+                    service.saveAllProduct(dataList);
+                    dataserviceprepared.prepareData();
+                    System.out.println("Import product terminé.");
+                } catch (Exception e) {
+                    System.out.println("Erreur import product async : " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }).start();
+
+            return ResponseEntity.ok("Fichier reçu. Import lancé en arrière-plan.");
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur : " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Erreur : " + e.getMessage());
         }
     }
-    
-    // ========== ARCHIVE ENDPOINT: Manual archiving AFTER data cleaning ==========
-    
-    /**
-     * Manual archive endpoint - archives cleaned PreparedData to archive table
-     * Called AFTER user has cleaned the data in Data Table
-     */
+
     @PostMapping("/archive-prepared-data")
     public ResponseEntity<Map<String, Object>> archivePreparedData(
             @RequestParam Integer year,
             @RequestParam String quarter,
             @RequestParam Integer week,
             @RequestParam(required = false) String weekDate) {
-        
+
         try {
             ArchiveDataService.ArchiveResult result = archiveService.archiveCurrentPreparedData(
-                year, quarter, week, weekDate
+                    year, quarter, week, weekDate
             );
-            
+
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", result.message,
-                "batchId", result.batchId,
-                "archivedRows", result.archivedCount,
-                "isOverwrite", result.isOverwrite
+                    "success", true,
+                    "message", result.message,
+                    "batchId", result.batchId,
+                    "archivedRows", result.archivedCount,
+                    "isOverwrite", result.isOverwrite
             ));
-            
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("success", false, "message", "Archive failed: " + e.getMessage()));
+                    .body(Map.of(
+                            "success", false,
+                            "message", "Archive failed: " + e.getMessage()
+                    ));
         }
     }
 }
